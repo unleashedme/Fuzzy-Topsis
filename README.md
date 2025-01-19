@@ -1,5 +1,5 @@
 # Fuzzy-Topsis
-Goal : Using Triangular Fuzzy Numbers Make a multicriteria Decision Making System where criteria evaluations are subjectiove and uncertain.
+Goal : Using Triangular Fuzzy Numbers Make a multicriteria Decision Making System where criteria evaluations are subjectiove and uncertain.<br />
 Steps:<br />
     1.Define the decision matrix: List the alternatives and criteria.<br />
     2.Normalize the fuzzy matrix: Normalize the fuzzy data to bring all values to a comparable scale.<br />
