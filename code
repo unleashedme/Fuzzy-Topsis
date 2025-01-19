@@ -1,0 +1,161 @@
+import numpy as np
+
+# Define linguistic terms mapped to Triangular Fuzzy Numbers (TFNs)
+VERY_LOW = np.array([1, 1, 2])
+LOW = np.array([1, 2, 3])
+MEDIUM = np.array([2, 3, 4])
+HIGH = np.array([3, 4, 5])
+VERY_HIGH = np.array([4, 5, 5])
+
+# Fuzzification for beneficial criteria
+def fuzzify(value, thresholds):
+    if value <= thresholds[0]:
+        return VERY_LOW
+    elif thresholds[0] < value <= thresholds[1]:
+        return LOW
+    elif thresholds[1] < value <= thresholds[2]:
+        return MEDIUM
+    elif thresholds[2] < value <= thresholds[3]:
+        return HIGH
+    else:
+        return VERY_HIGH
+
+# Normalize the fuzzy decision matrix
+def normalize_fuzzy_matrix(fuzzy_matrix):
+    num_alternatives, num_criteria = fuzzy_matrix.shape[0], fuzzy_matrix.shape[1]
+    normalized_matrix = np.zeros_like(fuzzy_matrix)
+
+    for i in range(num_alternatives):
+        for j in range(num_criteria):
+            normalized_matrix[i, j] = fuzzy_matrix[i, j] / np.max(fuzzy_matrix[:, j, 2], axis=0)
+
+    return normalized_matrix
+
+# Weighted normalized fuzzy decision matrix
+def calculate_weighted_normalized_matrix(normalized_matrix, weights):
+    weighted_normalized_matrix = np.zeros_like(normalized_matrix)
+    for i in range(normalized_matrix.shape[0]):
+        for j in range(normalized_matrix.shape[1]):
+            weighted_normalized_matrix[i, j] = normalized_matrix[i, j] * fuzzy_weighted_matrix[j]
+    return weighted_normalized_matrix
+
+
+
+def calculate_distance_from_ideal(normalized_matrix, ideal_solution):
+    # Expand ideal_solution to match the shape of normalized_matrix
+    expanded_ideal_solution = np.tile(ideal_solution, (normalized_matrix.shape[1] // ideal_solution.shape[0], 1))
+
+    # Calculate distances
+    distances = np.sqrt(np.sum(np.square(normalized_matrix - expanded_ideal_solution), axis=2))
+
+    # Sum distances along the criteria axis
+    return np.sum(distances, axis=1)
+
+
+# Calculate closeness coefficient (CC)
+def calculate_closeness_coefficient(d_positive, d_negative):
+    return d_negative / (d_positive + d_negative)
+
+dataset = np.array([
+    [10, 22, 9, 60, 90, 0, 1, 1, 0, 1, 1, 70, 60, 80, 70],
+    [0.33, 9, 3, 70, 60, 30, 1, 0, 0, 1, 1, 80, 60, 80, 70],
+    [8, 13, 8, 70, 80, 0, 0, 0, 0, 1, 0, 70, 50, 80, 60],
+    [15, 28, 5, 60, 90, 0, 1, 0, 0, 1, 1, 60, 50, 70, 60],
+    [3, 19, 8, 90, 60, 90, 1, 1, 0, 1, 1, 60, 70, 90, 90],
+    [10, 23, 10, 60, 90, 0, 1, 0, 1, 1, 1, 60, 70, 90, 80],
+    [2, 15, 4, 60, 90, 60, 0, 0, 0, 1, 1, 70, 60, 80, 70],
+    [10, 20, 20, 90, 90, 40, 1, 0, 0, 1, 1, 60, 60, 60, 60],
+    [23, 25, 4, 90, 60, 60, 1, 1, 0, 1, 1, 60, 70, 60, 60],
+    [51, 23, 6, 90, 80, 60, 1, 1, 0, 1, 1, 80, 80, 90, 90]
+], dtype=float)
+
+
+# Thresholds for fuzzification
+beneficial_thresholds = [20, 40, 60, 80]
+
+# Fuzzify the dataset
+fuzzy_matrix = np.zeros((dataset.shape[0], dataset.shape[1], 3))
+
+for i in range(dataset.shape[0]):
+    fuzzy_matrix[i, 0] = fuzzify(dataset[i, 0], beneficial_thresholds)  # C1
+    fuzzy_matrix[i, 1] = fuzzify(dataset[i, 1], beneficial_thresholds)  # C2
+    fuzzy_matrix[i, 2] = fuzzify(dataset[i, 2], beneficial_thresholds)  # C3
+    fuzzy_matrix[i, 3] = fuzzify(dataset[i, 3], beneficial_thresholds)  # C4
+    fuzzy_matrix[i, 4] = fuzzify(dataset[i, 4], beneficial_thresholds)  # C5
+    fuzzy_matrix[i, 5] = fuzzify(dataset[i, 5], beneficial_thresholds)  # C6
+    fuzzy_matrix[i, 6] = fuzzify(dataset[i, 6], beneficial_thresholds)  # C7
+    fuzzy_matrix[i, 7] = fuzzify(dataset[i, 7], beneficial_thresholds)  # C8
+    fuzzy_matrix[i, 8] = fuzzify(dataset[i, 8], beneficial_thresholds)  # C9
+    fuzzy_matrix[i, 9] = fuzzify(dataset[i, 9], beneficial_thresholds)  # C10
+    fuzzy_matrix[i, 10] = fuzzify(dataset[i, 10], beneficial_thresholds)  # C10
+    fuzzy_matrix[i, 11] = fuzzify(dataset[i, 11], beneficial_thresholds)  # C10
+    fuzzy_matrix[i, 12] = fuzzify(dataset[i, 12], beneficial_thresholds)  # C10
+    fuzzy_matrix[i, 13] = fuzzify(dataset[i, 13], beneficial_thresholds)  # C10
+    fuzzy_matrix[i, 14] = fuzzify(dataset[i, 14], beneficial_thresholds)  # C10
+
+print(fuzzy_matrix)
+
+# Define weights for each criterion (sum of weights should be 1)
+weights = np.array([0.125,0.1166,0.1083,0.1,0.0916,0.0833,0.075,0.0666,0.0583,0.05,0.04166,0.0333,0.025,0.0166,0.0833])
+
+# Scale weights to match thresholds
+# Assuming the weights are on a scale of 0 to 1 and need to be scaled to 0-120 for comparison.
+weights_scaled = weights * 80
+
+# Initialize fuzzy weighted matrix
+fuzzy_weighted_matrix = []
+
+# Convert weights to fuzzy sets based on thresholds
+for weight in weights_scaled:
+    if weight < beneficial_thresholds[0]:
+        fuzzy_weighted_matrix.append(VERY_LOW)
+    elif beneficial_thresholds[0] <= weight < beneficial_thresholds[1]:
+        fuzzy_weighted_matrix.append(LOW)
+    elif beneficial_thresholds[1] <= weight < beneficial_thresholds[2]:
+        fuzzy_weighted_matrix.append(MEDIUM)
+    elif beneficial_thresholds[2] <= weight < beneficial_thresholds[3]:
+        fuzzy_weighted_matrix.append(HIGH)
+    else:
+        fuzzy_weighted_matrix.append(VERY_HIGH)
+
+# Convert the list to a numpy array for easier handling
+fuzzy_weighted_matrix = np.array(fuzzy_weighted_matrix)
+
+# Print the resulting fuzzy weighted matrix
+print("Fuzzy Weighted Matrix:")
+print(fuzzy_weighted_matrix)
+
+# Normalize the fuzzy decision matrix
+normalized_matrix = normalize_fuzzy_matrix(fuzzy_matrix)
+print("Normalized Fuzzy Decision Matrix:")
+print(normalized_matrix)
+
+# Calculate the weighted normalized fuzzy decision matrix
+weighted_normalized_matrix = calculate_weighted_normalized_matrix(normalized_matrix, weights)
+print("\nWeighted Normalized Fuzzy Decision Matrix:")
+print(weighted_normalized_matrix)
+
+# Define the positive and negative ideal solutions
+positive_ideal = np.array([VERY_HIGH, VERY_HIGH, VERY_HIGH, VERY_HIGH, VERY_HIGH])
+negative_ideal = np.array([VERY_LOW, VERY_LOW, VERY_LOW, VERY_LOW, VERY_LOW])
+
+# Calculate distances to positive and negative ideal solutions
+d_positive = calculate_distance_from_ideal(normalized_matrix, positive_ideal)
+d_negative = calculate_distance_from_ideal(normalized_matrix, negative_ideal)
+
+print("\nDistances to Positive Ideal Solution:")
+print(d_positive)
+print("\nDistances to Negative Ideal Solution:")
+print(d_negative)
+
+# Calculate the closeness coefficient
+closeness_coefficient = calculate_closeness_coefficient(d_positive, d_negative)
+print("\nCloseness Coefficients:")
+for i, cc in enumerate(closeness_coefficient):
+    print(f"Supplier {i + 1}: CC = {cc:.10f}")
+
+# Identify the supplier with the highest closeness coefficient
+best_supplier_index = np.argmax(closeness_coefficient)  # Get the index of the maximum CC
+best_supplier_cc = closeness_coefficient[best_supplier_index]  # Get the highest CC
+
+print(f"\nThe best choice is  {best_supplier_index + 1} with a closeness coefficient of {best_supplier_cc:.10f}.")
